@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Node.js Chat</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <input type="text" name="UserName" id="UserName">
+        
+        <main id="container">
+            <div id="MessageContainer"></div>
+            
+            <input type="text" name="" id="caixaDeTexto">
+
+        </main>
+        
+        
+
+
+
+         <script src="/socket.io/socket.io.js"></script> 
+
+
+
+
+        <script type="module">
+            import {
+                AddMessage, 
+                CreateMsgObject
+            } 
+            from './index.js'
+
+              var socket = io();
+
+
+
+
+            const MessageContainer = document.getElementById('MessageContainer')
+            const MessageContent = document.getElementById('caixaDeTexto')
+            const UserNameInput = document.getElementById('UserName')
+
+
+            MessageContent.addEventListener('keypress', (event) => {
+
+                if (event.key === 'Enter' && MessageContent.value !== '') {
+                    const MsgJson = CreateMsgObject(MessageContent.value, UserNameInput.value)
+                    AddMessage(MessageContent.value, MsgJson.UserID)
+
+                    socket.emit('Mensagem', MsgJson)
+
+                    MessageContent.value = ''
+
+                 }
+
+            })
+
+
+
+             socket.on('reenviarMensagem', (MensagemRecebida) => {
+                const { msg, UserID } = MensagemRecebida
+                AddMessage(msg, UserID)
+             })
+
+             socket.on('SendState', (State) => {
+                console.log(State)
+                 for ( let i = 0; i < State.length; i++ ){
+                 const { msg, UserID } = State[i]
+                 AddMessage(msg, UserID)
+             }
+             
+         })
+            
+            </script>
+
+            
+
+    </body>
+</html>

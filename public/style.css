@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+
+* {
+margin: 0;
+padding: 0;
+color: rgb(208, 208, 208);
+font-family: 'Montserrat', sans-serif;
+}
+
+
+body {
+background-color: rgb(16, 12, 24);
+
+}
+
+#container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    align-items: end;
+    align-items: center;
+    
+}
+
+#caixaDeTexto {
+    background-color: transparent;
+    border: 0;
+    border-bottom: solid rgb(180, 180, 180) 1px;
+    width: 60%;
+    height: fit-content;
+    margin-top: 15px;
+    font-size: 1rem;
+    
+
+}
+
+
+
+#MessageContainer {
+    height: 90vh;
+    width: 50%;
+    padding: 3vh 3vh 0vh 3vh;
+    background-color: rgb(26, 20, 38);
+    overflow-y: scroll;
+}
+
+.userid {
+    font-size: 0.8em;
+    opacity: 0.6;
+}
+.Message {
+    margin-left: 10px;
+}
+.MessageBox {
+    height: fit-content;
+    flex-wrap: wrap;
+    margin: 2vh 0vw;
+}
+#UserName {
+    background-color: transparent;
+    border: 0px transparent;
+    border-bottom: 1px solid white;
+    margin: 3vh 0 0 4vw;
+    position: absolute;
+}
