@@ -22,7 +22,7 @@
 
 
          <script src="/socket.io/socket.io.js"></script> 
-
+import io from 'socket.io-client'
 
 
 
@@ -33,7 +33,7 @@
             } 
             from './index.js'
             import io from 'socket.io-client'
-              var socket = io();
+              var socket = io('https://node-js-chat.vercel.app');
 
 
 
