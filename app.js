@@ -7,6 +7,7 @@ const app = express();
 const server = http.createServer(app)
 const io = new Server(server)
 
+const port = process.env.port || 4001
 
 function readJsonFile() {
   return new Promise((resolve, reject) => {
@@ -40,6 +41,7 @@ function ObjetoEmJson(Objeto) {
 
 
 //-----------------------------------------------------------------------------------------------
+
 
 app.use(express.static('public'))
 
