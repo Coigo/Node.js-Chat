@@ -5,10 +5,49 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Node.js Chat</title>
-        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="./style/index.css">
+        <link rel="stylesheet" href="./style/login.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
     <body>
-        <input type="text" name="UserName" id="UserName">
+
+        <div id="Login" >
+
+                <form id="Loginform">
+                    <span onclick="HideFrame('Login')"><i class="fa-solid fa-xmark"></i></span>
+                    <input type="text" name="Username" id="Username">
+                    <input type="password" name="Password" id="Password">
+                    <input type="submit" id="LoginButton">
+                </form>
+
+
+
+        </div>
+        <div id="Signin" >
+
+                <div id="Signinform">
+                    <span onclick="HideFrame('Signin')"><i class="fa-solid fa-xmark"></i></span>
+                    <input type="text" name="Username" id="CreateUsername">
+                    <input type="password" name="Password" id="CreatePassword">
+                    <input type="password" name="Confirmation" id="Confirmation">
+                    <button type="submit" id="SigninButton"> Criar usuário </button>
+                </div>
+
+
+
+        </div>
+
+
+
+
+
+
+        <div id="menu">
+            <button  onclick="ShowFrame('Login')">Log In</button>
+            <button  onclick="ShowFrame('Signin')">Sign In</button>
+
+        </div>
+
         
         <main id="container">
             <div id="MessageContainer"></div>
@@ -19,34 +58,62 @@
         
         
 
+<script>
 
 
-         <script src="/socket.io/socket.io.js"></script> 
-import io from 'socket.io-client'
+
+    function ShowFrame(frame) {
+
+                frame = document.getElementById(frame)
+                frame.style.display = 'flex'
+            }
+        
+    function HideFrame(frame) {
+                frame = document.getElementById(frame)
+                frame.style.display = 'none'
+    }
+
+
+</script>
+
+        <script src="/socket.io/socket.io.js"></script> 
+
 
 
 
         <script type="module">
             import {
                 AddMessage, 
-                CreateMsgObject
+                MessageFactory,
+                CreateNewUser   
+                
             } 
-            from './index.js'
-            import io from 'socket.io-client'
-              var socket = io('https://node-js-chat.vercel.app');
+            from './script/index.js'
+            
+        import CreateObserver from './script/observer.js'
 
 
+
+
+
+
+
+
+            const socket = io();
+            const Observer = CreateObserver()
+            
 
 
             const MessageContainer = document.getElementById('MessageContainer')
             const MessageContent = document.getElementById('caixaDeTexto')
             const UserNameInput = document.getElementById('UserName')
-
+            const Login = document.getElementById('LoginButton')
+            const Signin = document.getElementById('SigninButton')
 
             MessageContent.addEventListener('keypress', (event) => {
 
                 if (event.key === 'Enter' && MessageContent.value !== '') {
-                    const MsgJson = CreateMsgObject(MessageContent.value, UserNameInput.value)
+                    const MsgJson = MessageFactory(MessageContent.value)
                     AddMessage(MessageContent.value, MsgJson.UserID)
 
                     socket.emit('Mensagem', MsgJson)
@@ -55,7 +122,7 @@ import io from 'socket.io-client'
 
                  }
 
-            })
+            })  
 
 
 
@@ -65,7 +132,6 @@ import io from 'socket.io-client'
              })
 
              socket.on('SendState', (State) => {
-                console.log(State)
                  for ( let i = 0; i < State.length; i++ ){
                  const { msg, UserID } = State[i]
                  AddMessage(msg, UserID)
@@ -73,6 +139,53 @@ import io from 'socket.io-client'
              
          })
             
+
+         
+                        Signin.addEventListener("click", () => {
+                                    const username = document.getElementById("CreateUsername").value
+                                    const password = document.getElementById("CreatePassword").value
+                                    const confirmation = document.getElementById("Confirmation").value
+
+                            const NewUserInfo = { username, password, confirmation } 
+                            
+                            Observer.Subscribe(CreateNewUser)
+                            const NewUserStatus =  Observer.notifyAll(NewUserInfo)
+                            Observer.unSubscribe(CreateNewUser)
+                            
+                            const Status = {
+                                'SenhasDiferentes' : function () {
+                                    console.log('As senhas não conhecidem')
+                                },
+                                'SenhaCurta' : function () {
+                                    console.log('A Senha é fraca')
+                                },
+                                'TudoCerto' : function () {
+                                    socket.emit('CreateNewUser', NewUserInfo )
+                                }
+                            }
+                            console.log(NewUserStatus)
+                            const getStatus = Status[NewUserStatus]()
+                            
+
+            // passar as informções pra validar
+                //validar senha
+                //validar usuário
+            
+
+            //validar usuário
+                // retorna | cria
+
+            
+
+        })
+
+        socket.on('usuarioInvalido', (erro) => {
+            console.log(erro)
+        })
+
+        function CreateNewUserError(erro) {
+        }
+
             </script>
 
             

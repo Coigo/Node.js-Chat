@@ -1,20 +1,21 @@
 {
-  "name": "iniciando",
+  "name": "NodeJs Chat",
   "version": "1.0.0",
   "description": "Node.js Chat",
-  "main": "index.js",
+  "main": "app.js",
   "engines": {
     "node": "18.x"
   },
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
   },
   "author": "MrCoigo",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
     "nodemon": "^2.0.22",
-    "socket.io": "^4.6.2"
+    "socket.io": "^4.6.2",
+    "sqlite3": "^5.1.6"
   }
 }

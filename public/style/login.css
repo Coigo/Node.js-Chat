@@ -1,0 +1,26 @@
+#Login, #Signin{
+    background-color: rgba(0, 0, 0, 0.511);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    justify-content: center;
+    align-items: center;
+
+}
+
+#Loginform, #Signinform {
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    height: fit-content;
+    padding: 30vh 3vw;
+}
+
+#Username, #Password, #Confirmation, #CreateUsername, #CreatePassword {
+    margin: 5px;
+    height: 2rem;
+    width: 15rem;
+}
