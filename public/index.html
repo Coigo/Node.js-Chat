@@ -13,12 +13,13 @@
 
         <div id="Login" >
 
-                <form id="Loginform">
+                <div id="Loginform">
                     <span onclick="HideFrame('Login')"><i class="fa-solid fa-xmark"></i></span>
                     <input type="text" name="Username" id="Username">
                     <input type="password" name="Password" id="Password">
                     <input type="submit" id="LoginButton">
-                </form>
+                    <p class="entreAqui">Não tem uma conta? <span onclick="HideFrame('Login'), ShowFrame('Signin')">Crie uma!</span></p>
+                </div>
 
 
 
@@ -26,11 +27,13 @@
         <div id="Signin" >
 
                 <div id="Signinform">
+                    <p id="errorS" style="color: #eb5e28;"></p>
                     <span onclick="HideFrame('Signin')"><i class="fa-solid fa-xmark"></i></span>
                     <input type="text" name="Username" id="CreateUsername">
                     <input type="password" name="Password" id="CreatePassword">
                     <input type="password" name="Confirmation" id="Confirmation">
                     <button type="submit" id="SigninButton"> Criar usuário </button>
+                    <p class="entreAqui">Já tem uma conta? <span onclick="HideFrame('Signin'), ShowFrame('Login')">Entre aqui</span></p>
                 </div>
 
 
@@ -42,7 +45,7 @@
 
 
 
-        <div id="menu">
+        <div id="menu" style="position: absolute;">
             <button  onclick="ShowFrame('Login')">Log In</button>
             <button  onclick="ShowFrame('Signin')">Sign In</button>
 
@@ -85,13 +88,12 @@
             import {
                 AddMessage, 
                 MessageFactory,
-                CreateNewUser   
-                
+                CreateNewUser,
             } 
             from './script/index.js'
             
         import CreateObserver from './script/observer.js'
-
+        import User from './script/user.js'
 
 
 
@@ -101,7 +103,7 @@
 
             const socket = io();
             const Observer = CreateObserver()
-            
+            var currentUser
 
 
             const MessageContainer = document.getElementById('MessageContainer')
@@ -112,15 +114,20 @@
 
             MessageContent.addEventListener('keypress', (event) => {
 
-                if (event.key === 'Enter' && MessageContent.value !== '') {
-                    const MsgJson = MessageFactory(MessageContent.value)
-                    AddMessage(MessageContent.value, MsgJson.UserID)
+                if (event.key === 'Enter' ) {
+                    const MsgJson = MessageFactory(MessageContent.value, currentUser.GetName())
 
-                    socket.emit('Mensagem', MsgJson)
+                    Observer.Subscribe(AddMessage)
+                    Observer.Subscribe(EmitMessage)
+                    Observer.notifyAll(MsgJson)
+                    Observer.unSubscribe(AddMessage)
+                    Observer.unSubscribe(EmitMessage)
+                    
 
-                    MessageContent.value = ''
+                    MessageContent.value = null
 
                  }
+            
 
             })  
 
@@ -132,19 +139,18 @@
              })
 
              socket.on('SendState', (State) => {
-                 for ( let i = 0; i < State.length; i++ ){
-                 const { msg, UserID } = State[i]
-                 AddMessage(msg, UserID)
-             }
+                for (let i = 0; i < State.length; i++) {
+                    AddMessage(State[i]);
+                }
              
          })
             
 
          
                         Signin.addEventListener("click", () => {
-                                    const username = document.getElementById("CreateUsername").value
-                                    const password = document.getElementById("CreatePassword").value
-                                    const confirmation = document.getElementById("Confirmation").value
+                                const username = document.getElementById("CreateUsername").value
+                                const password = document.getElementById("CreatePassword").value
+                                const confirmation = document.getElementById("Confirmation").value
 
                             const NewUserInfo = { username, password, confirmation } 
                             
@@ -165,30 +171,58 @@
                             }
                             console.log(NewUserStatus)
                             const getStatus = Status[NewUserStatus]()
+                        })
+
+
+                        Login.addEventListener('click', () => {
+                                const Username = document.getElementById('Username').value
+                                const Password = document.getElementById('Password').value
+
+                            const user = { Username, Password }
+                                socket.emit('LoginUser', user)
                             
-
-            // passar as informções pra validar
-                //validar senha
-                //validar usuário
+                        })
             
 
-            //validar usuário
-                // retorna | cria
-
             
-
-        })
 
         socket.on('usuarioInvalido', (erro) => {
-            console.log(erro)
+            const errText = document.getElementById('errorS')
+            errText.innerHTML = 'Usuário não disponivel. :/'
+            setInterval(() => {
+                errText.innerHTML = ''
+                
+            }, 
+            3000)
         })
 
-        function CreateNewUserError(erro) {
-        }
 
+        socket.on('uauarioCriado', () => {
+            console.log('usuario Criado')
+            HideFrame('Signin'); ShowFrame('Login')
+        })
+
+        socket.on('UsuarioLogado', (userInfo) => {
+            console.log(userInfo)
+            const { Username } = userInfo
+            
+            currentUser = new User(Username)
+            HideFrame('Login')
+
+
+
+        })
+
+        function EmitMessage(Message) {
+            if (Message.Msg != '') {
+                socket.emit('Mensagem', Message)
+            }
+        }
+            
             </script>
 
             
+        
 
     </body>
 </html>

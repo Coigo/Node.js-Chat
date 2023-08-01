@@ -14,7 +14,8 @@
 #Loginform, #Signinform {
     display: flex;
     flex-direction: column;
-    background-color: white;
+    background-color: rgb(18, 18, 19);
+    border: solid 1px rgb(255, 255, 255) ;
     height: fit-content;
     padding: 30vh 3vw;
 }
@@ -23,4 +24,16 @@
     margin: 5px;
     height: 2rem;
     width: 15rem;
+}
+
+.entreAqui {
+    color: rgb(255, 255, 255);
+    font-size: 15px;
+}
+
+.entreAqui span {
+    color: #eb5e28;
+    cursor: pointer;
+    text-decoration: underline;
+
 }

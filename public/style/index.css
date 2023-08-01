@@ -10,7 +10,7 @@ font-family: 'Montserrat', sans-serif;
 
 body {
     overflow: hidden;
-background-color: rgb(16, 12, 24);
+background-color: rgb(50, 49, 53);
 
 }
 
@@ -41,7 +41,7 @@ background-color: rgb(16, 12, 24);
     height: 90vh;
     width: 50%;
     padding: 3vh 3vh 0vh 3vh;
-    background-color: rgb(26, 20, 38);
+    background-color: #232225;
     overflow-y: scroll;
 }
 

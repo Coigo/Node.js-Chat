@@ -111,16 +111,31 @@ io.on('connection', (socket) => {
       socket.on('CreateNewUser', (newUserInfo) => {
         DbInteraction.CheckIfUsernameExist(newUserInfo)
         .then((handler) => {
-          console.log('usuario aceiro')
-          console.log(User.UserFactory(newUserInfo))
+            DbInteraction.SaveNewUser(newUserInfo)
+            .then(() => {
+              socket.emit('uauarioCriado', 'teste')
+            })
+            .catch((err) => {
+              console.log(err)
+            })
         })
         .catch((err) => {
-          console.log()
           socket.emit('usuarioInvalido', 'erro')
         })
         
       })
 
+
+      socket.on('LoginUser', (User) => {
+
+        DbInteraction.LoginUser(User)
+          .then((rows) => {
+            socket.emit('UsuarioLogado', rows[0])
+          })
+          .catch((err) => {
+            console.log(err)
+          })
+      })
 })
 
 server.listen(4001, () => {

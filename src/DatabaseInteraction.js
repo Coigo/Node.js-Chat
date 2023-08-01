@@ -8,40 +8,48 @@ const db = new sqlite.Database('./src/users.db')
 
 
 function SaveNewUser(newUser) {
-  console.log(newUser)
-  const { Username, Password, id } = newUser;
-
-  
-
-
-
-  function InsertNewUser() {
-    db.run('INSERT INTO usuarios (Username, Password, id) VALUES (?, ?, ?)', [Username, Password, id], function(err) {
-      if (err) {
-        console.error(err);
-        return;
-      }
-      console.log('> Inserção realizada com sucesso.');
-
-      db.close();
-    });
-  }
-
-  return InsertNewUser();
-}
-
-
-function SelectUserFromDb(username, password) {
   return new Promise((resolve, reject) => {
-    db.all('SELECT Username FROM usuarios WHERE Username = ? AND Password = ?', [username, password], function(err, rows) {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(rows)
-      }
-    })
-  })
+    console.log(newUser);
+    const { username, password, id } = newUser;
+
+    function InsertNewUser() {
+      db.run('INSERT INTO usuarios (Username, Password, id) VALUES (?, ?, ?)', [username, password, id], function(err) {
+        if (err) {
+          console.error(err);
+          reject(err); // Reject the Promise if there's an error.
+          return;
+        }
+        console.log('> Inserção realizada com sucesso.');
+
+        resolve(); // Resolve the Promise when the user is successfully inserted.
+      });
+    }
+
+    InsertNewUser();
+  });
 }
+
+
+function LoginUser(user) {
+  const { Username, Password } = user
+
+  function SelectUserFromDb(Username, Password) {
+
+    return new Promise((resolve, reject) => {
+      db.all('SELECT Username FROM usuarios WHERE Username = ? AND Password = ?', [Username, Password], function(err, rows) {
+        if (err) {
+          reject(err)
+        } else {
+          console.log('ok')
+          resolve(rows)
+        }
+        
+      })
+    })
+  }
+  return SelectUserFromDb(Username, Password)
+}
+
 
 
 
@@ -84,6 +92,7 @@ function readJsonFile(File) {
             
         }
         else { existe(user) }
+        
       })
     })
   }
@@ -93,8 +102,9 @@ function readJsonFile(File) {
     readJsonFile,
     SalvarObjeto,
     SaveNewUser,
-    SelectUserFromDb,
+    LoginUser,
     CheckIfUsernameExist
+    
 }
 
 

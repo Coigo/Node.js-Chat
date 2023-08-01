@@ -5,12 +5,12 @@ var guesthasbeenset = false
 var guestID 
 
 
-export function MessageFactory(msg, UserID) {
+export function MessageFactory(msg, Username) {
 
   function CreateMessageObject() {
     const MsgJson = {
       msg,
-      UserID
+      Username
     }
     
     return MsgJson
@@ -25,22 +25,28 @@ export function MessageFactory(msg, UserID) {
 
 
 
-const  MessageStructure = (Message, UserID) => {
-  return `<p class="userid">${UserID}</p>
-  <p class=Message>${Message}</p>
+const  MessageStructure = (Message) => {
+  return `<p class="userid">${Message.Username}</p>
+  <p class=Message>${Message.msg}</p>
   `
 }
 
-export function AddMessage(Message, UserID) {
-  const MessageBox = document.createElement('div')
-  MessageBox.classList = 'MessageBox'
-  MessageBox.innerHTML = MessageStructure(Message, UserID)
+export function AddMessage(Message) {
+  if ( Message.msg != '') {
+    const MessageBox = document.createElement('div')
+    MessageBox.classList = 'MessageBox'
+    MessageBox.innerHTML = MessageStructure(Message)
+  
+    MessageContainer.appendChild(MessageBox)
 
-  MessageContainer.appendChild(MessageBox)
+  }
+  
 }
 
+
+
 export function CreateNewUser(NewUser) {
-  console.log(NewUser)
+
   function Validate(NewUser){
       const { password, confirmation } = NewUser
       if ( password === confirmation ) {
@@ -62,3 +68,5 @@ export function CreateNewUser(NewUser) {
   }
     return Validate(NewUser)
 }
+
+
