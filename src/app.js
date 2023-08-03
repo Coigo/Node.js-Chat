@@ -90,14 +90,11 @@ io.on('connection', (socket) => {
       })
 
       socket.on('Mensagem', ( Msg ) => {
-        console.log(Msg)
         socket.broadcast.emit('reenviarMensagem', Msg)
 
         DbInteraction.readJsonFile('src/mensagens.json')
           .then(allMessages => {
             allMessages.push(Msg)
-            console.log(allMessages)
-
             DbInteraction.SalvarObjeto(allMessages, 'src/mensagens.json')
 
 

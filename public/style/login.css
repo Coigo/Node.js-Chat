@@ -8,7 +8,7 @@
     display: none;
     justify-content: center;
     align-items: center;
-
+    z-index: 2;
 }
 
 #Loginform, #Signinform {
@@ -36,4 +36,45 @@
     cursor: pointer;
     text-decoration: underline;
 
+}
+
+
+#menubtn {
+        background-color: transparent;
+        
+    color: rgb(255, 255, 255);
+    padding: 10px;
+    font-size: 30px;
+    border: none;
+    cursor: pointer;
+    margin-left: 20px;
+}
+#menuContainer { 
+    margin-left: 30px;
+    display: none;
+    z-index: 0;
+    background-color: #39373b;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.05)
+
+}
+#menuContainer span {
+    color: rgb(255, 255, 255);
+    padding: 5px 16px;
+    text-decoration: none;
+    display: block;
+    
+}
+
+#menu:hover #menuContainer {
+    display: block;
+    
+}
+#menu:hover #menubtn .fa-bars{
+    color: #eb5e28;
+}
+
+#menusignin:hover, #menulogin:hover {
+    color: #eb5e28;
+    
 }

@@ -45,11 +45,15 @@
 
 
 
-        <div id="menu" style="position: absolute;">
-            <button  onclick="ShowFrame('Login')">Log In</button>
-            <button  onclick="ShowFrame('Signin')">Sign In</button>
+        <nav id="menu" style="position: absolute;">
+            <button id="menubtn"><i class="fa-solid fa-bars"></i></button>
+            <div id="menuContainer">
+                <span id="menulogin" onclick="ShowFrame('Login')">Log In</span>
+                <span id="menusignin" onclick="ShowFrame('Signin')">Sign Up</span>
+                
+            </div>
 
-        </div>
+        </nav>
 
         
         <main id="container">
@@ -77,149 +81,157 @@
     }
 
 
+    
+
 </script>
 
-        <script src="/socket.io/socket.io.js"></script> 
+<script src="/socket.io/socket.io.js"></script> 
 
 
 
 
-        <script type="module">
-            import {
-                AddMessage, 
-                MessageFactory,
-                CreateNewUser,
-            } 
-            from './script/index.js'
+<script type="module">
+    import {
+        AddMessage, 
+        MessageFactory,
+        CreateNewUser,
+    } 
+    from './script/index.js'
+    
+import CreateObserver from './script/observer.js'
+import User from './script/user.js'
+
+
+
+
+
+
+
+    const socket = io();
+    const Observer = CreateObserver()
+    var currentUser
+
+
+    const MessageContainer = document.getElementById('MessageContainer')
+    const MessageContent = document.getElementById('caixaDeTexto')
+    const UserNameInput = document.getElementById('UserName')
+    const Login = document.getElementById('LoginButton')
+    const Signin = document.getElementById('SigninButton')
+
+    MessageContent.addEventListener('keypress', (event) => {
+
+        if (event.key === 'Enter' ) {
+            const MsgJson = MessageFactory(MessageContent.value, currentUser.GetName())
             
-        import CreateObserver from './script/observer.js'
-        import User from './script/user.js'
-
-
-
-
-
-
-
-            const socket = io();
-            const Observer = CreateObserver()
-            var currentUser
-
-
-            const MessageContainer = document.getElementById('MessageContainer')
-            const MessageContent = document.getElementById('caixaDeTexto')
-            const UserNameInput = document.getElementById('UserName')
-            const Login = document.getElementById('LoginButton')
-            const Signin = document.getElementById('SigninButton')
-
-            MessageContent.addEventListener('keypress', (event) => {
-
-                if (event.key === 'Enter' ) {
-                    const MsgJson = MessageFactory(MessageContent.value, currentUser.GetName())
-
-                    Observer.Subscribe(AddMessage)
-                    Observer.Subscribe(EmitMessage)
-                    Observer.notifyAll(MsgJson)
-                    Observer.unSubscribe(AddMessage)
-                    Observer.unSubscribe(EmitMessage)
-                    
-
-                    MessageContent.value = null
-
-                 }
+            console.log('passo 1')
+            Observer.Subscribe(AddMessage)
+            Observer.notifyAll(MsgJson)
+            Observer.unSubscribe(AddMessage)
+console.log(MsgJson)
+            EmitMessage(MsgJson)
+            
             
 
-            })  
+            MessageContent.value = null
+
+         }
+    
+    })  
 
 
 
-             socket.on('reenviarMensagem', (MensagemRecebida) => {
-                const { msg, UserID } = MensagemRecebida
-                AddMessage(msg, UserID)
-             })
+     socket.on('reenviarMensagem', (MensagemRecebida) => {
 
-             socket.on('SendState', (State) => {
-                for (let i = 0; i < State.length; i++) {
-                    AddMessage(State[i]);
-                }
-             
-         })
-            
+        const { msg, Username } = MensagemRecebida
+        Observer.Subscribe(AddMessage)
+            Observer.notifyAll(MensagemRecebida)
+            Observer.unSubscribe(AddMessage)
+     })
 
-         
-                        Signin.addEventListener("click", () => {
-                                const username = document.getElementById("CreateUsername").value
-                                const password = document.getElementById("CreatePassword").value
-                                const confirmation = document.getElementById("Confirmation").value
-
-                            const NewUserInfo = { username, password, confirmation } 
-                            
-                            Observer.Subscribe(CreateNewUser)
-                            const NewUserStatus =  Observer.notifyAll(NewUserInfo)
-                            Observer.unSubscribe(CreateNewUser)
-                            
-                            const Status = {
-                                'SenhasDiferentes' : function () {
-                                    console.log('As senhas não conhecidem')
-                                },
-                                'SenhaCurta' : function () {
-                                    console.log('A Senha é fraca')
-                                },
-                                'TudoCerto' : function () {
-                                    socket.emit('CreateNewUser', NewUserInfo )
-                                }
-                            }
-                            console.log(NewUserStatus)
-                            const getStatus = Status[NewUserStatus]()
-                        })
-
-
-                        Login.addEventListener('click', () => {
-                                const Username = document.getElementById('Username').value
-                                const Password = document.getElementById('Password').value
-
-                            const user = { Username, Password }
-                                socket.emit('LoginUser', user)
-                            
-                        })
-            
-
-            
-
-        socket.on('usuarioInvalido', (erro) => {
-            const errText = document.getElementById('errorS')
-            errText.innerHTML = 'Usuário não disponivel. :/'
-            setInterval(() => {
-                errText.innerHTML = ''
-                
-            }, 
-            3000)
-        })
-
-
-        socket.on('uauarioCriado', () => {
-            console.log('usuario Criado')
-            HideFrame('Signin'); ShowFrame('Login')
-        })
-
-        socket.on('UsuarioLogado', (userInfo) => {
-            console.log(userInfo)
-            const { Username } = userInfo
-            
-            currentUser = new User(Username)
-            HideFrame('Login')
-
-
-
-        })
-
-        function EmitMessage(Message) {
-            if (Message.Msg != '') {
-                socket.emit('Mensagem', Message)
-            }
+     socket.on('SendState', (State) => {
+        Observer.Subscribe(AddMessage)
+        for (let i = 0; i < State.length; i++) {
+            Observer.notifyAll(State[i])
         }
-            
-            </script>
+        Observer.unSubscribe(AddMessage)
+     
+ })
+    
+
+ 
+                Signin.addEventListener("click", () => {
+                        const username = document.getElementById("CreateUsername").value
+                        const password = document.getElementById("CreatePassword").value
+                        const confirmation = document.getElementById("Confirmation").value
+
+                    const NewUserInfo = { username, password, confirmation } 
+                    
+                    Observer.Subscribe(CreateNewUser)
+                    const NewUserStatus =  Observer.notifyAll(NewUserInfo)
+                    Observer.unSubscribe(CreateNewUser)
+                    
+                    const Status = {
+                        'SenhasDiferentes' : function () {
+                            console.log('As senhas não conhecidem')
+                        },
+                        'SenhaCurta' : function () {
+                            console.log('A Senha é fraca')
+                        },
+                        'TudoCerto' : function () {
+                            socket.emit('CreateNewUser', NewUserInfo )
+                        }
+                    }
+                    console.log(NewUserStatus)
+                    const getStatus = Status[NewUserStatus]()
+                })
+
+
+                Login.addEventListener('click', () => {
+                        const Username = document.getElementById('Username').value
+                        const Password = document.getElementById('Password').value
+
+                    const user = { Username, Password }
+                        socket.emit('LoginUser', user)
+                    
+                })
+    
+
+    
+
+socket.on('usuarioInvalido', (erro) => {
+    const errText = document.getElementById('errorS')
+    errText.innerHTML = 'Usuário não disponivel. :/'
+    setInterval(() => {
+        errText.innerHTML = ''
+        
+    }, 
+    3000)
+})
+
+
+socket.on('uauarioCriado', () => {
+    console.log('usuario Criado')
+    HideFrame('Signin'); ShowFrame('Login')
+})
+
+socket.on('UsuarioLogado', (userInfo) => {
+    console.log(userInfo)
+    const { Username } = userInfo
+    
+    currentUser = new User(Username)
+    HideFrame('Login')
+
+
+
+})
+
+function EmitMessage(Message) {
+    if (Message.msg != '') {  
+        socket.emit('Mensagem', Message)
+    }
+}
+    
+    </script>
 
             
         
