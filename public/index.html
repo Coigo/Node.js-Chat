@@ -14,7 +14,7 @@
         <div id="Login" >
 
                 <div id="Loginform">
-                    <span onclick="HideFrame('Login')"><i class="fa-solid fa-xmark"></i></span>
+                    <span id="closeLogin" onclick="HideFrame('Login')"><i class="fa-solid fa-xmark"></i></span>
                     <input type="text" name="Username" id="Username">
                     <input type="password" name="Password" id="Password">
                     <input type="submit" id="LoginButton">
@@ -26,15 +26,15 @@
         </div>
         <div id="Signin" >
 
-                <div id="Signinform">
+                <form id="Signinform" action="http://localhost:4002/login" method="post">
                     <p id="errorS" style="color: #eb5e28;"></p>
-                    <span onclick="HideFrame('Signin')"><i class="fa-solid fa-xmark"></i></span>
+                    <span id="closeSignin" onclick="HideFrame('Signin')"><i class="fa-solid fa-xmark"></i></span>
                     <input type="text" name="Username" id="CreateUsername">
                     <input type="password" name="Password" id="CreatePassword">
                     <input type="password" name="Confirmation" id="Confirmation">
                     <button type="submit" id="SigninButton"> Criar usuário </button>
-                    <p class="entreAqui">Já tem uma conta? <span onclick="HideFrame('Signin'), ShowFrame('Login')">Entre aqui</span></p>
-                </div>
+                    <p class="entreAqui">Já tem uma conta? <span >Entre aqui</span></p>
+                </form>
 
 
 
@@ -48,8 +48,13 @@
         <nav id="menu" style="position: absolute;">
             <button id="menubtn"><i class="fa-solid fa-bars"></i></button>
             <div id="menuContainer">
-                <span id="menulogin" onclick="ShowFrame('Login')">Log In</span>
-                <span id="menusignin" onclick="ShowFrame('Signin')">Sign Up</span>
+                <div id="unlogedContent">
+                    <span id="menulogin" >Log In</span>
+                    <span id="menusignin">Sign Up</span>
+                </div>
+                <div id="logedContent"style="display: none;">
+                    <span id="Logout" >Logout</span>
+                </div>
                 
             </div>
 
@@ -69,17 +74,10 @@
 
 
 
-    function ShowFrame(frame) {
 
-                frame = document.getElementById(frame)
-                frame.style.display = 'flex'
-            }
-        
-    function HideFrame(frame) {
-                frame = document.getElementById(frame)
-                frame.style.display = 'none'
-    }
+    
 
+    
 
     
 
@@ -95,21 +93,18 @@
         AddMessage, 
         MessageFactory,
         CreateNewUser,
-    } 
+        ChangeContent
+    }
     from './script/index.js'
     
 import CreateObserver from './script/observer.js'
 import User from './script/user.js'
 
 
-
-
-
-
-
     const socket = io();
     const Observer = CreateObserver()
-    var currentUser
+    const ChangeC = ChangeContent()
+    let currentUser
 
 
     const MessageContainer = document.getElementById('MessageContainer')
@@ -122,22 +117,18 @@ import User from './script/user.js'
 
         if (event.key === 'Enter' ) {
             const MsgJson = MessageFactory(MessageContent.value, currentUser.GetName())
-            
-            console.log('passo 1')
+                
             Observer.Subscribe(AddMessage)
             Observer.notifyAll(MsgJson)
             Observer.unSubscribe(AddMessage)
-console.log(MsgJson)
             EmitMessage(MsgJson)
-            
-            
-
             MessageContent.value = null
+            ChangeC.ajustScroll()
+            
 
          }
     
     })  
-
 
 
      socket.on('reenviarMensagem', (MensagemRecebida) => {
@@ -154,46 +145,11 @@ console.log(MsgJson)
             Observer.notifyAll(State[i])
         }
         Observer.unSubscribe(AddMessage)
+        console.log('desinscrita')
+        ChangeC.ajustScroll()
      
  })
     
-
- 
-                Signin.addEventListener("click", () => {
-                        const username = document.getElementById("CreateUsername").value
-                        const password = document.getElementById("CreatePassword").value
-                        const confirmation = document.getElementById("Confirmation").value
-
-                    const NewUserInfo = { username, password, confirmation } 
-                    
-                    Observer.Subscribe(CreateNewUser)
-                    const NewUserStatus =  Observer.notifyAll(NewUserInfo)
-                    Observer.unSubscribe(CreateNewUser)
-                    
-                    const Status = {
-                        'SenhasDiferentes' : function () {
-                            console.log('As senhas não conhecidem')
-                        },
-                        'SenhaCurta' : function () {
-                            console.log('A Senha é fraca')
-                        },
-                        'TudoCerto' : function () {
-                            socket.emit('CreateNewUser', NewUserInfo )
-                        }
-                    }
-                    console.log(NewUserStatus)
-                    const getStatus = Status[NewUserStatus]()
-                })
-
-
-                Login.addEventListener('click', () => {
-                        const Username = document.getElementById('Username').value
-                        const Password = document.getElementById('Password').value
-
-                    const user = { Username, Password }
-                        socket.emit('LoginUser', user)
-                    
-                })
     
 
     
@@ -211,26 +167,43 @@ socket.on('usuarioInvalido', (erro) => {
 
 socket.on('uauarioCriado', () => {
     console.log('usuario Criado')
-    HideFrame('Signin'); ShowFrame('Login')
+    ChangeC.HideFrame('Signin'); ChangeC.ShowFrame('Login')
 })
 
 socket.on('UsuarioLogado', (userInfo) => {
     console.log(userInfo)
     const { Username } = userInfo
     
-    currentUser = new User(Username)
-    HideFrame('Login')
-
-
+     function Login() {
+        currentUser =  new User(Username);
+        ChangeC.HideFrame('Login');
+        ChangeC.changeMenuContent(currentUser);
+    }
+    Login()
 
 })
+
 
 function EmitMessage(Message) {
     if (Message.msg != '') {  
         socket.emit('Mensagem', Message)
     }
 }
-    
+
+function logoff() {
+      currentUser.Logoff()
+      ChangeC.changeMenuContent()
+}
+
+const logoffbtn = document.getElementById('Logout')
+    logoffbtn.addEventListener('click', () => {
+        Observer.Subscribe(logoff)
+        Observer.notifyAll()
+        Observer.unSubscribe(logoff)
+  
+})
+
+
     </script>
 
             

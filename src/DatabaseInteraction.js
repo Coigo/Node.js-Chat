@@ -7,27 +7,7 @@ const db = new sqlite.Database('./src/users.db')
 
 
 
-function SaveNewUser(newUser) {
-  return new Promise((resolve, reject) => {
-    console.log(newUser);
-    const { username, password, id } = newUser;
 
-    function InsertNewUser() {
-      db.run('INSERT INTO usuarios (Username, Password, id) VALUES (?, ?, ?)', [username, password, id], function(err) {
-        if (err) {
-          console.error(err);
-          reject(err); // Reject the Promise if there's an error.
-          return;
-        }
-        console.log('> Inserção realizada com sucesso.');
-
-        resolve(); // Resolve the Promise when the user is successfully inserted.
-      });
-    }
-
-    InsertNewUser();
-  });
-}
 
 
 function LoginUser(user) {
@@ -101,7 +81,6 @@ function readJsonFile(File) {
   module.exports =  {
     readJsonFile,
     SalvarObjeto,
-    SaveNewUser,
     LoginUser,
     CheckIfUsernameExist
     

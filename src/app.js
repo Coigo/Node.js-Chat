@@ -1,25 +1,23 @@
 const DbInteraction = require('./DatabaseInteraction')
-const User = require('./Users')
+
 const express = require('express');
 const http = require('http');
 const { Server } = require("socket.io")
+const axios = require('axios')
 
 const bodyParser = require("body-parser");
-const { dirname } = require('path');
-const { send } = require('process');
 
 const app = express();
 const server = http.createServer(app)
 const io = new Server(server)
 
 
-
-
-
+ 
 
 //-----------------------------------------------------------------------------------------------
 
 app.use(express.static('public'))
+app.use(express.json())
 app.use(bodyParser.urlencoded({
   extended:true
 }))
@@ -30,47 +28,33 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '../public/index.html')
 });
 
-app.get('/signin', (req, res) => {
-  res.sendFile(__dirname + '../public/signin.html')
-});
-
- app.post('/signin', (req, res) => {
-    let Username = req.body.UserName
-    let Password = req.body.password
-   
-    let newUser = User.UserFactory(Username, Password)
-    
-    DbInteraction.SaveNewUser(newUser)
- })
-
- app.get('/login', (req, res) => {
-  res.sendFile(__dirname + '../public/login.html')
+app.get('/login', (req, res) => {
+  res.sendFile('login.html', { root: 'public' })
 })
 
-app.post('/login', (req, res) => {
-  let username = req.body.UserName;
-  let password = req.body.password;
+app.get('/signup', (req, res) => {
+  res.sendFile('signup.html', { root: 'public' })
+})
 
-  DbInteraction.SelectUserFromDb(username, password)
-    .then(rows => {
-      if (rows.length > 0) {
 
-        res.sendFile(__dirname + '../public/index.html')
-        res.send
-      } else {
-        // Usuário não encontrado ou senha incorreta
-        console.log("Usuário não encontrado");
-        res.sendStatus(401);
+app.post('/login', async (req, res) => {
+  const userInfo = req.body
+  console.log(userInfo)
+
+
+})
+
+app.post('/signup', async (req, res) => {
+  try {
+    const userInfo = req.body
+    console.log(userInfo)
+    const result = await axios.post('http://localhost:4002/signup', userInfo)
+    res.send(result)
   
-      }
-    })
-    .catch(err => {
-      // Trata o erro adequadamente
-      console.log(err);
-      res.sendStatus(500);
-    });
-});
-
+  } catch (err) {
+    console.log(err)
+  }
+})
 
 
 io.on('connection', (socket) => {
@@ -105,35 +89,17 @@ io.on('connection', (socket) => {
           })
 
       })
-      socket.on('CreateNewUser', (newUserInfo) => {
-        DbInteraction.CheckIfUsernameExist(newUserInfo)
-        .then((handler) => {
-            DbInteraction.SaveNewUser(newUserInfo)
-            .then(() => {
-              socket.emit('uauarioCriado', 'teste')
-            })
-            .catch((err) => {
-              console.log(err)
-            })
-        })
-        .catch((err) => {
-          socket.emit('usuarioInvalido', 'erro')
-        })
-        
-      })
-
-
-      socket.on('LoginUser', (User) => {
-
-        DbInteraction.LoginUser(User)
-          .then((rows) => {
-            socket.emit('UsuarioLogado', rows[0])
-          })
-          .catch((err) => {
-            console.log(err)
-          })
-      })
 })
+
+function VerifyTOKEN(req, res, next) {
+  const token = req.headers['x-access-token']
+  jwt.verify(token, process.env.SECRET, (err, decoded) => {
+      if ( err ) return req.status(401)
+
+      req = decoded
+      next()
+  })
+}
 
 server.listen(4001, () => {
   console.log('Aplicação ativa na porta 4001')
