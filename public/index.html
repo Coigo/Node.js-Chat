@@ -92,7 +92,6 @@
     import {
         AddMessage, 
         MessageFactory,
-        CreateNewUser,
         ChangeContent
     }
     from './script/index.js'
@@ -112,6 +111,20 @@ import User from './script/user.js'
     const UserNameInput = document.getElementById('UserName')
     const Login = document.getElementById('LoginButton')
     const Signin = document.getElementById('SigninButton')
+
+
+    document.addEventListener("DOMContentLoaded", () => {
+        console.log('aaaaaa')
+        const name = "tonen=";
+        const cDecoded = decodeURIComponent(document.cookie); //to be careful
+        const cArr = cDecoded.split('; ');
+        let res;
+        cArr.forEach(val => {
+            if (val.indexOf(name) === 0) res = val.substring(name.length);
+        })
+        return res
+        console.log(res)
+    })
 
     MessageContent.addEventListener('keypress', (event) => {
 
