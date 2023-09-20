@@ -1,4 +1,5 @@
 import CreateObserver from "./observer.js"
+import User from './user.js'
 
 const MessageContainer = document.getElementById('MessageContainer')
 var guesthasbeenset = false
@@ -48,8 +49,9 @@ export function AddMessage(Message) {
 
 
 export function Validate(NewUser) {
-      const { password, confirmation } = NewUser
-      if ( password === confirmation ) {
+      const { password, confirm } = NewUser
+      console.log(password, confirm)
+      if ( password === confirm ) {
           
             function CheckPasswordLenght() {
                     if ( password.length >= 8) {
@@ -113,9 +115,28 @@ export function ChangeContent() {
 }
 
 
+export function getUsercredentials( user ) {
+  console.log(user)
+  const currentUser = new User(user)
+  return currentUser
+}
 
+export function display( Message, paragraph ) {
+  paragraph.innerHTML = Message
+  setTimeout( () => paragraph.innerHTML = "",
+  10000)
+}
 
-
-
+export function GetUsernameStatus(code) {
+  const status = {
+    200: () => {
+      return 1
+    },
+    400: () => {
+    return 0
+    }
+  }
+  return status[code]()
+}
 
 

@@ -70,18 +70,8 @@
         
         
 
-<script>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
-
-
-
-    
-
-    
-
-    
-
-</script>
 
 <script src="/socket.io/socket.io.js"></script> 
 
@@ -92,129 +82,153 @@
     import {
         AddMessage, 
         MessageFactory,
-        ChangeContent
+        ChangeContent,
+        getUsercredentials,
+        GetUsernameStatus
     }
     from './script/index.js'
     
-import CreateObserver from './script/observer.js'
-import User from './script/user.js'
-
-
-    const socket = io();
+    import CreateObserver from './script/observer.js'
+    import User from './script/user.js'
+    
     const Observer = CreateObserver()
     const ChangeC = ChangeContent()
     let currentUser
 
 
-    const MessageContainer = document.getElementById('MessageContainer')
-    const MessageContent = document.getElementById('caixaDeTexto')
-    const UserNameInput = document.getElementById('UserName')
-    const Login = document.getElementById('LoginButton')
-    const Signin = document.getElementById('SigninButton')
+    document.addEventListener("DOMContentLoaded", async () => {
+        try {
+            const response = await fetch('http://localhost:4001/', {
+                body: document.cookie,
+                method:'post',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            });
+            const user = await response.json()
+            console.log(user.username)
 
-
-    document.addEventListener("DOMContentLoaded", () => {
-        console.log('aaaaaa')
-        const name = "tonen=";
-        const cDecoded = decodeURIComponent(document.cookie); //to be careful
-        const cArr = cDecoded.split('; ');
-        let res;
-        cArr.forEach(val => {
-            if (val.indexOf(name) === 0) res = val.substring(name.length);
-        })
-        return res
-        console.log(res)
-    })
-
-    MessageContent.addEventListener('keypress', (event) => {
-
-        if (event.key === 'Enter' ) {
-            const MsgJson = MessageFactory(MessageContent.value, currentUser.GetName())
+            if ( user.id ) {
+                Observer.Subscribe(getUsercredentials);
+                currentUser =  Observer.notifyAll( user );
+                Observer.unSubscribe(getUsercredentials);
+            }
+            else {          
+                window.location.href = "/login"
                 
-            Observer.Subscribe(AddMessage)
-            Observer.notifyAll(MsgJson)
-            Observer.unSubscribe(AddMessage)
-            EmitMessage(MsgJson)
-            MessageContent.value = null
-            ChangeC.ajustScroll()
+            }
+        }
+        catch ( err ) {
+            window.location.href = "/login"
+           console.log(err)
+
+           
+
             
 
-         }
-    
-    })  
-
-
-     socket.on('reenviarMensagem', (MensagemRecebida) => {
-
-        const { msg, Username } = MensagemRecebida
-        Observer.Subscribe(AddMessage)
-            Observer.notifyAll(MensagemRecebida)
-            Observer.unSubscribe(AddMessage)
-     })
-
-     socket.on('SendState', (State) => {
-        Observer.Subscribe(AddMessage)
-        for (let i = 0; i < State.length; i++) {
-            Observer.notifyAll(State[i])
         }
-        Observer.unSubscribe(AddMessage)
-        console.log('desinscrita')
-        ChangeC.ajustScroll()
+});
+
+
+
+const MessageContainer = document.getElementById('MessageContainer')
+const MessageContent = document.getElementById('caixaDeTexto')
+const UserNameInput = document.getElementById('UserName')
+const Login = document.getElementById('LoginButton')
+const Signin = document.getElementById('SigninButton')
+
+
+ const socket = io();
+
+     MessageContent.addEventListener('keypress', (event) => {
+
+         if (event.key === 'Enter' ) {
+             const MsgJson = MessageFactory(MessageContent.value, currentUser.GetName())
+                
+             Observer.Subscribe(AddMessage)
+             Observer.notifyAll(MsgJson)
+             Observer.unSubscribe(AddMessage)
+             EmitMessage(MsgJson)
+             MessageContent.value = null
+             ChangeC.ajustScroll()
+            
+
+          }
+    
+     })  
+
+
+      socket.on('reenviarMensagem', (MensagemRecebida) => {
+
+         const { msg, Username } = MensagemRecebida
+         Observer.Subscribe(AddMessage)
+             Observer.notifyAll(MensagemRecebida)
+             Observer.unSubscribe(AddMessage)
+      })
+
+      socket.on('SendState', (State) => {
+         Observer.Subscribe(AddMessage)
+         for (let i = 0; i < State.length; i++) {
+             Observer.notifyAll(State[i])
+         }
+         Observer.unSubscribe(AddMessage)
+         console.log('desinscrita')
+         ChangeC.ajustScroll()
      
- })
+  })
     
     
 
     
 
-socket.on('usuarioInvalido', (erro) => {
-    const errText = document.getElementById('errorS')
-    errText.innerHTML = 'Usuário não disponivel. :/'
-    setInterval(() => {
-        errText.innerHTML = ''
+// socket.on('usuarioInvalido', (erro) => {
+//     const errText = document.getElementById('errorS')
+//     errText.innerHTML = 'Usuário não disponivel. :/'
+//     setInterval(() => {
+//         errText.innerHTML = ''
         
-    }, 
-    3000)
-})
+//     }, 
+//     3000)
+// })
 
 
-socket.on('uauarioCriado', () => {
-    console.log('usuario Criado')
-    ChangeC.HideFrame('Signin'); ChangeC.ShowFrame('Login')
-})
+// socket.on('uauarioCriado', () => {
+//     console.log('usuario Criado')
+//     ChangeC.HideFrame('Signin'); ChangeC.ShowFrame('Login')
+// })
 
-socket.on('UsuarioLogado', (userInfo) => {
-    console.log(userInfo)
-    const { Username } = userInfo
+// socket.on('UsuarioLogado', (userInfo) => {
+//     console.log(userInfo)
+//     const { Username } = userInfo
     
-     function Login() {
-        currentUser =  new User(Username);
-        ChangeC.HideFrame('Login');
-        ChangeC.changeMenuContent(currentUser);
-    }
-    Login()
+//      function Login() {
+//         currentUser =  new User(Username);
+//         ChangeC.HideFrame('Login');
+//         ChangeC.changeMenuContent(currentUser);
+//     }
+//     Login()
 
-})
+// })
 
 
-function EmitMessage(Message) {
-    if (Message.msg != '') {  
-        socket.emit('Mensagem', Message)
-    }
-}
+// function EmitMessage(Message) {
+//     if (Message.msg != '') {  
+//         socket.emit('Mensagem', Message)
+//     }
+// }
 
-function logoff() {
-      currentUser.Logoff()
-      ChangeC.changeMenuContent()
-}
+// function logoff() {
+//       currentUser.Logoff()
+//       ChangeC.changeMenuContent()
+// }
 
-const logoffbtn = document.getElementById('Logout')
-    logoffbtn.addEventListener('click', () => {
-        Observer.Subscribe(logoff)
-        Observer.notifyAll()
-        Observer.unSubscribe(logoff)
+// const logoffbtn = document.getElementById('Logout')
+//     logoffbtn.addEventListener('click', () => {
+//         Observer.Subscribe(logoff)
+//         Observer.notifyAll()
+//         Observer.unSubscribe(logoff)
   
-})
+// })
 
 
     </script>

@@ -1,18 +1,38 @@
 const DbInteraction = require('./DatabaseInteraction')
 
+const { Server } = require("socket.io")
 const express = require('express');
 const http = require('http');
-const { Server } = require("socket.io")
 const axios = require('axios')
-const { VerifyTOKEN } = require('./modules.js')
+const jwt = require('jsonwebtoken')
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
+
+
 const app = express();
 const server = http.createServer(app)
 const io = new Server(server)
 
+require('dotenv').config()
 
 
+
+function AuthTOKEN(req, res, next) {
+  try {
+    console.log("o Token recebido é: ", req.cookies.tonen)
+    const user = jwt.verify(req.cookies.tonen, process.env.SECRET)
+    console.log(`Usuario Atutenticado ${user}`);
+    const { username, id } = user // o problema ta aqui, nao to enviando o usuario de volta
+    req.decoded = { username, id }
+    next()
+    
+    
+  } catch (err) {
+    res.clearCookie("tonen")
+    res.writeHead(302, { "location": "/login" } )
+      
+  }
+}
 
 //-----------------------------------------------------------------------------------------------
 
@@ -22,6 +42,7 @@ app.use(cookieParser())
 app.use(bodyParser.urlencoded({
   extended:true
 }))
+
 
 console.log('> Servidor reiniciado')
 
@@ -39,23 +60,28 @@ app.get('/signup', (req, res) => {
 })
 
 
-app.post('/login', async (req, res) => {
-    const userInfo = req.body
-    try {
-      const login = await axios.post('http://localhost:4002/login', userInfo)
-      console.log(login)
-      if ( login.status === 207 ) {
-        res.status(207).end()
-      }
-      else if ( login.status === 200 ) {
-        res.cookie('tonen', login.data, { httpOnly: true, secure: true } )
-        res.status(200).end()
-      }
-    } 
-    catch ( err ) {
-      res.status(500)
+app.post('/', AuthTOKEN, (req, res) => {
+  const user = req.decoded
+  console.log('A decodificação é: ', user)
+  return res.status(200).send(JSON.stringify(user))
+})
 
-    }
+app.post('/login', async (req, res) => {
+  const userInfo = req.body
+  console.log(userInfo)
+  try {
+    console.log('Requisição de login  feita à API')
+    const login = await axios.post('http://localhost:4002/login', userInfo)
+    res.cookie('tonen', login.data,  {  maxAge: 180000 , httpOnly: true }  )
+    res.writeHead(302, { 'Location': '/' })
+    res.status(200).end()
+  }
+  catch ( err ) {
+    console.log('Usuario não Conectado')
+    if ( err.status === 401 ) res.status(401).end()
+    else res.status(500).end()
+  
+}
 
 
 })
@@ -64,13 +90,16 @@ app.post('/signup', async (req, res) => {
   try {
     const userInfo = req.body
     console.log(userInfo)
-    const result = await axios.post('http://localhost:4002/signup', userInfo)
+    const result = await axios.post('http://localhost:4002/signup', userInfo )
+    console.log('bbb') 
     
-    res.status(result.response.status)
+    res.status(result.status).end()
   
   } catch (err) {
-    console.log('Erro interno')
-    res.status(500)
+    console.log('err')
+    res.redirect('/login')
+    res.status(err.status).end()
+
   }
 })
 
@@ -106,6 +135,21 @@ io.on('connection', (socket) => {
             console.log(err)
           })
 
+      })
+      socket.on('CheckUsername', async (  username  ) => {
+        console.log(username)
+        try {
+          const result = await axios.post('http://localhost:4002/check', username )
+          socket.emit( 'usernameStatus', result.status)
+
+        }
+        catch (err) {
+
+          socket.emit( 'usernameStatus', err.response.status)
+          console.log(err.response.status)
+          
+        }
+        
       })
 })
 

@@ -1,7 +1,9 @@
 export default class User {
 
-    constructor(username) {
+    constructor(user) {
+        const { username, id } = user
         this.username = username
+        this.id = id
     }
     
     GetName() {
@@ -11,4 +13,6 @@ export default class User {
         this.username = undefined
     }
 
+
 }
+

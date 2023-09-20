@@ -13,6 +13,11 @@
             font-family: 'Inter', sans-serif;
             color: aliceblue;
         }
+
+        #usernameError, #displayError {
+            transition: 0.2;
+            position: absolute;
+        }
     </style>
 </head>
 <body class="bg-dark">
@@ -24,6 +29,7 @@
                     <div class="form-group m-5">
                         <label for="username">Nome do Usuário</label>
                         <input class="form-control mb-5" type="text" name="username" id="username" required>
+                        <p id="usernameError" style="color:red;"></p>
                     </div>
                     <div class="form-group m-5">
                         <label for="password">Senha</label>
@@ -31,7 +37,8 @@
                     </div>
                     <div class="form-group m-5">
                         <label for="password">Confirme a sua senha</label>
-                        <input class="form-control" type="password" name="confirm" id="confirm" required>
+                        <input class="form-control" type="password" name="confirm" id="confirm" required>                        
+                        <p id="displayError" style="color:red;"> </p>
                     </div>
                 </form>
                 <div class="form-control bg-dark border-0 m-4">
@@ -43,57 +50,96 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
+    <script src="/socket.io/socket.io.js"></script> 
     <script type="module">
 
-        import { Validate } from './script/index.js'
+        import { Validate, display, GetUsernameStatus } from './script/index.js'
         import CreateObserver from './script/observer.js'
+        let usernameStatus 
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const observer = CreateObserver()
-            const form = document.querySelector('form')
-            const submit = document.querySelector('.btn')
+        let Userinfo = {}
 
-            submit.addEventListener('click', (event) => {
-                event.preventDefault()
+        const observer = CreateObserver()
 
-                const confirmation = document.getElementById('confirm').value
-                const username = document.getElementById('username').value
+
+            const socket = io()
+            let usernameInput = document.getElementById("username")
+            
+            
+            usernameInput.addEventListener("keyup", (event) => {
+                let username = usernameInput.value
+                socket.emit('CheckUsername', { username } )
+            })
+            socket.on("usernameStatus", (result) => {
+                console.log(result)
+                             const displayError = document.getElementById("displayError")
+                             const usernameError = document.getElementById("usernameError")
+                             const status = {
+                                 400: () => {
+                                 display("Este username já foi escolhido!", usernameError)
+                                 usernameStatus = GetUsernameStatus(400)
+                                 },
+                                 500: () => {
+                                 display('Erro interno do servidor.', usernameError)
+                                 },
+                                 200: () => {
+                                    usernameStatus = GetUsernameStatus(200)
+                                    Userinfo.usernameStatus = usernameStatus
+                                    Userinfo.username = username.value
+                                 }
+                             }
+                             const callStatus = status[result]();
+                             console.log(usernameStatus)
+                 
+            })
+
+            const submit =  document.querySelector('.btn')
+            submit.addEventListener('click', () => {
                 const password = document.getElementById('password').value
-                
-                const NewUserInfo = { username, password, confirmation }
+                const confirm = document.getElementById('confirm').value
+    
+                Userinfo.password = password
+                Userinfo.confirm = confirm
+    
                 observer.Subscribe(Validate)
-                const newUserStatus = observer.notifyAll(NewUserInfo)
+                const newUserStatus = observer.notifyAll(Userinfo)
                 observer.unSubscribe(Validate)
-                
-                const statusFunctions = {
-                    'TudoCerto': async () => {
-                       await FetchForm(NewUserInfo)
-                    },
-                    'SenhaCurta': async function() {
-                        console.log('Senha Curta')
-                    },
-                    'SenhasDiferentes': async function() {
-                        console.log('Senhas Diferentes')
-                    }
-                }
-                const callStatusFunction = statusFunctions[newUserStatus]()
+    
+                        const statusFunctions = {
+                            'SenhasDiferentes': async function() {
+                            display('Senhas diferentes!', displayError)
+                            },
+                            'SenhaCurta': async function() {
+                            display('Senha muito curta!')
+                            },
+                            'TudoCerto': async () => {
+                            await FetchForm(Userinfo)
+                            }
+                        }
+                        const callStatusFunction = statusFunctions[newUserStatus]()
+        })
 
-                async function FetchForm(userInfo) {
-                    try {
-                        const result = await axios.post("http://localhost:4001/signup", JSON.stringify(userInfo) , {
-                            headers: { "Content-Type": "application/json" }
-                        })
-                        
-                    }
-                    catch ( err ) {
-                        console.log(err)
-                    }
-                }
 
-            });
-        });
-    </script>
+
+  
+
+                    async function FetchForm(userInfo) {
+                        if ( userInfo.usernameStatus === 1 ) {
+                            console.log('ok')
+                            try {
+                                const result = await axios.post("http://localhost:4001/signup", JSON.stringify(userInfo),  {
+                                    headers: { "Content-Type": "application/json" }
+                                })
+                                window.location.href = "/login"
+                            }
+                            catch ( err ) {
+                                display('Erro interno do servidor, tente novamente mais tarde!', displayError)
+                            }
+                        }
+                    }
+
+
+        </script>
 </body>
 </html>
 

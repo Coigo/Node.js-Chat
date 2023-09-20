@@ -27,6 +27,7 @@
                     <div class="form-group m-5">
                         <label for="password">Senha</label>
                         <input class="form-control" type="password" name="password" id="password" required>
+                        <p id="errorDisplay" style="color: red;"> </p>
                     </div>
                 </form>
                 <div class="form-control bg-dark border-0 m-4">
@@ -39,7 +40,11 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
-    <script>
+    <script type="module">
+        import { display } from './script/index.js'
+
+
+
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.querySelector('form')
             const submit = document.querySelector('.btn')
@@ -53,17 +58,35 @@
                 if (username.length > 3 && password.length > 7) {
                     try {
                         const UserInfo = { username, password }
-                        const LoginRequest = await axios.post('http://localhost:4001/login', UserInfo)
+                        console.log(UserInfo)
+                        const LoginRequest = await fetch('http://localhost:4001/login', {
+                            body: JSON.stringify(UserInfo),
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                            
+                        });
+                        window.location.href = "/"
+
+                        console.log(LoginRequest)
                         
-                        if ( LoginRequest.status === 207) {
-                            console.log('Usuario ou senha incorretos')
-                        }
-                        else if (LoginRequest.status === 200) {
-                            console.log('Logado')
-                        }
+
+                        
                     }
                     catch (err) {
                         console.log(err)
+                        const errorDisplay = document.getElementById('errorDisplay')
+                        const errCode = err.status
+                        const status = {
+                            401: () => {
+                            display('Usuario ou senha incorretos', errorDisplay)
+                            },
+                            500: () => {
+                            display('Erro interno do servidor', errorDisplay)
+                            }
+                        }
+                        status[errCode]()
                     }   
                 }
                     

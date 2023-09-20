@@ -1,26 +1,13 @@
-
-
-
-
-function VerifyTOKEN(req, res, next) {
-    const token = req.headers['x-access-token']
-    jwt.verify(token, process.env.SECRET, (err, decoded) => {
-        if ( err ) {
-          return req.status(500)
-        }
-        else {
-          req = decoded
-        }
-        next()
-    })
-  }
-
+const jwt = require('jsonwebtoken')
+require('dotenv').config()
 
 
 
 
 module.exports = {
-    VerifyTOKEN,
+
 }
+
+
 
 
