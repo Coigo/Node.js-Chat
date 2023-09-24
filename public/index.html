@@ -108,12 +108,13 @@
             const user = await response.json()
             console.log(user.username)
 
-            if ( user.id ) {
+            if ( user.ok ) {
                 Observer.Subscribe(getUsercredentials);
                 currentUser =  Observer.notifyAll( user );
                 Observer.unSubscribe(getUsercredentials);
             }
             else {          
+                console.log('aaaa')
                 window.location.href = "/login"
                 
             }
@@ -143,8 +144,8 @@ const Signin = document.getElementById('SigninButton')
      MessageContent.addEventListener('keypress', (event) => {
 
          if (event.key === 'Enter' ) {
-             const MsgJson = MessageFactory(MessageContent.value, currentUser.GetName())
-                
+             const MsgJson = MessageFactory(MessageContent.value,  currentUser.GetName(), currentUser.GetAuth(), )
+                console.log(MsgJson)
              Observer.Subscribe(AddMessage)
              Observer.notifyAll(MsgJson)
              Observer.unSubscribe(AddMessage)
@@ -181,54 +182,54 @@ const Signin = document.getElementById('SigninButton')
 
     
 
-// socket.on('usuarioInvalido', (erro) => {
-//     const errText = document.getElementById('errorS')
-//     errText.innerHTML = 'Usuário não disponivel. :/'
-//     setInterval(() => {
-//         errText.innerHTML = ''
+ socket.on('usuarioInvalido', (erro) => {
+     const errText = document.getElementById('errorS')
+     errText.innerHTML = 'Usuário não disponivel. :/'
+     setInterval(() => {
+         errText.innerHTML = ''
         
-//     }, 
-//     3000)
-// })
+     }, 
+     3000)
+ })
 
 
-// socket.on('uauarioCriado', () => {
-//     console.log('usuario Criado')
-//     ChangeC.HideFrame('Signin'); ChangeC.ShowFrame('Login')
-// })
+ socket.on('uauarioCriado', () => {
+     console.log('usuario Criado')
+     ChangeC.HideFrame('Signin'); ChangeC.ShowFrame('Login')
+ })
 
-// socket.on('UsuarioLogado', (userInfo) => {
-//     console.log(userInfo)
-//     const { Username } = userInfo
+ socket.on('UsuarioLogado', (userInfo) => {
+     console.log(userInfo)
+     const { Username } = userInfo
     
-//      function Login() {
-//         currentUser =  new User(Username);
-//         ChangeC.HideFrame('Login');
-//         ChangeC.changeMenuContent(currentUser);
-//     }
-//     Login()
+      function Login() {
+         currentUser =  new User(Username);
+         ChangeC.HideFrame('Login');
+         ChangeC.changeMenuContent(currentUser);
+     }
+     Login()
 
-// })
+ })
 
 
-// function EmitMessage(Message) {
-//     if (Message.msg != '') {  
-//         socket.emit('Mensagem', Message)
-//     }
-// }
+ function EmitMessage(Message) {
+     if (Message.msg != '') {  
+         socket.emit('Mensagem', Message)
+     }
+ }
 
-// function logoff() {
-//       currentUser.Logoff()
-//       ChangeC.changeMenuContent()
-// }
+ function logoff() {
+       currentUser.Logoff()
+       ChangeC.changeMenuContent()
+ }
 
-// const logoffbtn = document.getElementById('Logout')
-//     logoffbtn.addEventListener('click', () => {
-//         Observer.Subscribe(logoff)
-//         Observer.notifyAll()
-//         Observer.unSubscribe(logoff)
+ const logoffbtn = document.getElementById('Logout')
+     logoffbtn.addEventListener('click', () => {
+         Observer.Subscribe(logoff)
+         Observer.notifyAll()
+         Observer.unSubscribe(logoff)
   
-// })
+ })
 
 
     </script>

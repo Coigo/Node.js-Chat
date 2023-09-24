@@ -3,11 +3,13 @@ const DbInteraction = require('./DatabaseInteraction')
 const { Server } = require("socket.io")
 const express = require('express');
 const http = require('http');
+
 const axios = require('axios')
 const jwt = require('jsonwebtoken')
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
-
+const crypto = require('crypto')
+const { private, decrypt } = require('./modules.js')
 
 const app = express();
 const server = http.createServer(app)
@@ -22,14 +24,22 @@ function AuthTOKEN(req, res, next) {
     console.log("o Token recebido é: ", req.cookies.tonen)
     const user = jwt.verify(req.cookies.tonen, process.env.SECRET)
     console.log(`Usuario Atutenticado ${user}`);
-    const { username, id } = user // o problema ta aqui, nao to enviando o usuario de volta
-    req.decoded = { username, id }
+    const { username, id } = user 
+
+
+
+    const privateAuth = private( {username, id} ) 
+    console.log(privateAuth)
+    req.decoded = { username, privateAuth }
+    req.decoded.ok = 1
+    console.log('Cookie Criado:', req.decoded)
     next()
     
     
   } catch (err) {
+    console.log(err)
     res.clearCookie("tonen")
-    res.writeHead(302, { "location": "/login" } )
+    return res.writeHead(302, { "location": "/login" } ).end()
       
   }
 }
@@ -121,19 +131,27 @@ io.on('connection', (socket) => {
       })
 
       socket.on('Mensagem', ( Msg ) => {
-        socket.broadcast.emit('reenviarMensagem', Msg)
-
-        DbInteraction.readJsonFile('src/mensagens.json')
-          .then(allMessages => {
-            allMessages.push(Msg)
-            DbInteraction.SalvarObjeto(allMessages, 'src/mensagens.json')
-
-
-
+        const { msg, Auth } = Msg
+        
+        const auth = JSON.parse(decrypt(Auth))
+        const { username, id } = auth
+        if ( id ) {
+          socket.broadcast.emit('reenviarMensagem',  { msg, username }  )
+  
+          DbInteraction.readJsonFile('src/mensagens.json')
+            .then(allMessages => {
+              allMessages.push({ msg, id })
+              DbInteraction.SalvarObjeto(allMessages, 'src/mensagens.json')
+  
           })
           .catch(err => {
             console.log(err)
           })
+          
+        }
+        else {
+          console.log('erraasd')
+        }
 
       })
       socket.on('CheckUsername', async (  username  ) => {

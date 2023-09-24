@@ -7,12 +7,13 @@ var guestID
 
 const Observer = CreateObserver()
 
-export function MessageFactory(msg, Username) {
+export function MessageFactory(msg, username, Auth) {
 
   function CreateMessageObject() {
     const MsgJson = {
       msg,
-      Username
+      username,
+      Auth
     }
     
     return MsgJson
@@ -28,7 +29,7 @@ export function MessageFactory(msg, Username) {
 
 
 const  MessageStructure = (Message) => {
-  return `<p class="userid">${Message.Username}</p>
+  return `<p class="userid">${Message.username}</p>
   <p class=Message>${Message.msg}</p>
   `
 }
