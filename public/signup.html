@@ -26,10 +26,16 @@
             <div class="col-5 bg-dark m-5">
                 <div class="h1">LOGIN</div>
                 <form action="/signup" method="post">
+ 
                     <div class="form-group m-5">
                         <label for="username">Nome do Usuário</label>
                         <input class="form-control mb-5" type="text" name="username" id="username" required>
-                        <p id="usernameError" style="color:red;"></p>
+                        <p id="usernameError" style="color:red; position:absolute; "></p>
+                    </div>
+                    <div class="form-group m-5">
+                        <label for="email">Email</label>
+                        <input class="form-control mb-5" type="email" name="email" id="email" required>
+                        <p id="emailError" style="color:red; position:absolute;"></p>
                     </div>
                     <div class="form-group m-5">
                         <label for="password">Senha</label>
@@ -38,7 +44,7 @@
                     <div class="form-group m-5">
                         <label for="password">Confirme a sua senha</label>
                         <input class="form-control" type="password" name="confirm" id="confirm" required>                        
-                        <p id="displayError" style="color:red;"> </p>
+                        <p id="displayError" style="color:red; position:absolute; margin-bottom: 2vh;"> </p>
                     </div>
                 </form>
                 <div class="form-control bg-dark border-0 m-4">
@@ -53,7 +59,7 @@
     <script src="/socket.io/socket.io.js"></script> 
     <script type="module">
 
-        import { Validate, display, GetUsernameStatus } from './script/index.js'
+        import { Validate, display, GetUserCredentialStatus } from './script/index.js'
         import CreateObserver from './script/observer.js'
         let usernameStatus 
 
@@ -64,42 +70,87 @@
 
             const socket = io()
             let usernameInput = document.getElementById("username")
+            let emailInput = document.getElementById("email")
+
+            emailInput.addEventListener("input", (event) => {
+                const email = emailInput.value.trim()
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+
+                if ( email.match(emailRegex) ) {
+                    socket.emit('CheckUsername', { check:"email", email } )
+                }   
+            })
+
+            socket.on("checkStatus", (result) => {
+                if ( result.checkType === "email" ) {
+                const displayError = document.getElementById("displayError")
+                const emailError = document.getElementById("emailError")
+
+                    const emailStatus = {
+                        400: () => {
+                            display('Este email já esta em uso! Tente outro.', emailError)
+                            const emailStauts = GetUserCredentialStatus(400)
+                            console.log('veio aqui em cima')
+                        },
+                        500: () => {
+                            display('Erro interno do servidor', displayError)
+                        },
+                        200: () => {
+                            const emailStauts = GetUserCredentialStatus(200)
+                            Userinfo.email = email
+                            Userinfo.emailStatus = emailStauts
+                            display("", emailError)
+                        }
+                    }
+                const callEmailStatus = emailStatus[result.status]()
+                }
+            })
             
             
-            usernameInput.addEventListener("keyup", (event) => {
+            
+            
+            usernameInput.addEventListener("input", (event) => {
                 let username = usernameInput.value
-                socket.emit('CheckUsername', { username } )
+                socket.emit('CheckUsername', { check:"username", username } )
             })
-            socket.on("usernameStatus", (result) => {
-                console.log(result)
-                             const displayError = document.getElementById("displayError")
-                             const usernameError = document.getElementById("usernameError")
-                             const status = {
-                                 400: () => {
-                                 display("Este username já foi escolhido!", usernameError)
-                                 usernameStatus = GetUsernameStatus(400)
-                                 },
-                                 500: () => {
-                                 display('Erro interno do servidor.', usernameError)
-                                 },
-                                 200: () => {
-                                    usernameStatus = GetUsernameStatus(200)
-                                    Userinfo.usernameStatus = usernameStatus
-                                    Userinfo.username = username.value
-                                 }
-                             }
-                             const callStatus = status[result]();
-                             console.log(usernameStatus)
-                 
+            socket.on("checkStatus", (result) => {
+                if ( result.checkType === "username" ) {
+                    console.log(result)
+                    const displayError = document.getElementById("displayError")
+                    const usernameError = document.getElementById("usernameError")
+    
+                    const usernameStatus = {
+                                    400: () => {
+                                        display("Este username já foi escolhido!", usernameError)
+                                        const usernameStatus = GetUserCredentialStatus(400)
+                                        console.log('veio aqui embaixo')
+                                    },
+                                    500: () => {
+                                        display('Erro interno do servidor.', displayError)
+                                    },
+                                    200: () => {
+                                        const usernameStatus = GetUserCredentialStatus(200)
+                                        Userinfo.usernameStatus = usernameStatus
+                                        Userinfo.username = username.value
+                                        display("", usernameError)
+                                    }
+                                }
+                                const callUsernameStatus = usernameStatus[result.status]();
+                                
+                                
+                } 
             })
+
 
             const submit =  document.querySelector('.btn')
             submit.addEventListener('click', () => {
                 const password = document.getElementById('password').value
                 const confirm = document.getElementById('confirm').value
-    
+                const email = document.getElementById('email').value
+                
                 Userinfo.password = password
                 Userinfo.confirm = confirm
+                Userinfo.email = email
     
                 observer.Subscribe(Validate)
                 const newUserStatus = observer.notifyAll(Userinfo)

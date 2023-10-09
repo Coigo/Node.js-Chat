@@ -128,7 +128,7 @@ export function display( Message, paragraph ) {
   10000)
 }
 
-export function GetUsernameStatus(code) {
+export function GetUserCredentialStatus(code) {
   const status = {
     200: () => {
       return 1

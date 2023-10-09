@@ -9,7 +9,8 @@ const jwt = require('jsonwebtoken')
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
 const crypto = require('crypto')
-const { private, decrypt } = require('./modules.js')
+const { private, decrypt } = require('./modules.js');
+const { error } = require('console');
 
 const app = express();
 const server = http.createServer(app)
@@ -28,9 +29,9 @@ function AuthTOKEN(req, res, next) {
 
 
 
-    const privateAuth = private( {username, id} ) 
+    const privateAuth = private( {username, id} ) //privateAuth é uma camada de segurança a mais. Um usuario poderia criar uma nova instancia da classe usuario e mandar uma mensagem na conta de outra pessoa
     console.log(privateAuth)
-    req.decoded = { username, privateAuth }
+    req.decoded = { username, id,  privateAuth } 
     req.decoded.ok = 1
     console.log('Cookie Criado:', req.decoded)
     next()
@@ -100,15 +101,19 @@ app.post('/signup', async (req, res) => {
   try {
     const userInfo = req.body
     console.log(userInfo)
-    const result = await axios.post('http://localhost:4002/signup', userInfo )
-    console.log('bbb') 
-    
-    res.status(result.status).end()
-  
-  } catch (err) {
+    if (userInfo.usernameStatus == 1 && userInfo.emailStatus == 1) {
+      const result = await axios.post('http://localhost:4002/create', userInfo )    
+      res.status(result.status).end()
+    } 
+    else {
+      const err = new Error("Alguma das verificações está incorreta")
+      err.status = 400
+      throw err
+  }
+  } 
+  catch (err) {
     console.log('err')
-    res.redirect('/login')
-    res.status(err.status).end()
+    res.status(err.status || 500).end()
 
   }
 })
@@ -155,16 +160,21 @@ io.on('connection', (socket) => {
 
       })
       socket.on('CheckUsername', async (  username  ) => {
-        console.log(username)
         try {
           const result = await axios.post('http://localhost:4002/check', username )
-          socket.emit( 'usernameStatus', result.status)
+          const { checkType } = result.data
+          socket.emit( 'checkStatus', {
+            status: result.status,
+            checkType
+          })
 
         }
         catch (err) {
-
-          socket.emit( 'usernameStatus', err.response.status)
-          console.log(err.response.status)
+          const { checkType } = err.response.data
+          socket.emit( 'checkStatus', {
+            status: err.response.status,
+            checkType
+          })
           
         }
         
