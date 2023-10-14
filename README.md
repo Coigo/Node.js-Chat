@@ -1,5 +1,5 @@
 # Node.js Chat
-#### Video Demo:  <https://youtu.be/HHbmnkAaOP0>
+
 #### Description:
     A on-line chat. In the Front-end using HTML, CSS and JavaScript. And in the back-end, Node.js and Express, 
     and the socket.io library to connect the two sides.
