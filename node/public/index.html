@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Node.js Chat</title>
+        <link rel="stylesheet" href="./style/index.css">
+        <link rel="stylesheet" href="./style/login.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    </head>
+    <body>
+
+        <div id="Login" >
+
+                <div id="Loginform">
+                    <span id="closeLogin" onclick="HideFrame('Login')"><i class="fa-solid fa-xmark"></i></span>
+                    <input type="text" name="Username" id="Username">
+                    <input type="password" name="Password" id="Password">
+                    <input type="submit" id="LoginButton">
+                    <p class="entreAqui">Não tem uma conta? <span onclick="HideFrame('Login'), ShowFrame('Signin')">Crie uma!</span></p>
+                </div>
+
+
+
+        </div>
+        <div id="Signin" >
+
+                <form id="Signinform" action="http://localhost:4002/login" method="post">
+                    <p id="errorS" style="color: #eb5e28;"></p>
+                    <span id="closeSignin" onclick="HideFrame('Signin')"><i class="fa-solid fa-xmark"></i></span>
+                    <input type="text" name="Username" id="CreateUsername">
+                    <input type="password" name="Password" id="CreatePassword">
+                    <input type="password" name="Confirmation" id="Confirmation">
+                    <button type="submit" id="SigninButton"> Criar usuário </button>
+                    <p class="entreAqui">Já tem uma conta? <span >Entre aqui</span></p>
+                </form>
+
+
+
+        </div>
+
+
+
+
+
+
+        <nav id="menu" style="position: absolute;">
+            <button id="menubtn"><i class="fa-solid fa-bars"></i></button>
+            <div id="menuContainer">
+                <div id="unlogedContent">
+                    <span id="menulogin" >Log In</span>
+                    <span id="menusignin">Sign Up</span>
+                </div>
+                <div id="logedContent"style="display: none;">
+                    <span id="Logout" >Logout</span>
+                </div>
+                
+            </div>
+
+        </nav>
+
+        
+        <main id="container">
+            <div id="MessageContainer"></div>
+            
+            <input type="text" name="" id="caixaDeTexto">
+
+        </main>
+        
+        
+
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
+<script src="/socket.io/socket.io.js"></script> 
+
+
+
+
+<script type="module">
+    import {
+        AddMessage, 
+        MessageFactory,
+        ChangeContent,
+        getUsercredentials,
+    }
+    from './script/index.js'
+    
+    import CreateObserver from './script/observer.js'
+    import User from './script/user.js'
+    
+    const Observer = CreateObserver()
+    const ChangeC = ChangeContent()
+    let currentUser
+
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        try {
+            const response = await fetch('http://localhost:4001/', {
+                body: document.cookie,
+                method:'post',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            });
+            const user = await response.json()
+            console.log(user.username)
+
+            if ( user.ok ) {
+                Observer.Subscribe(getUsercredentials);
+                currentUser =  Observer.notifyAll( user );
+                Observer.unSubscribe(getUsercredentials);
+            }
+            else {          
+                console.log('aaaa')
+                window.location.href = "/login"
+                
+            }
+        }
+        catch ( err ) {
+            window.location.href = "/login"
+           console.log(err)
+
+           
+
+            
+
+        }
+});
+
+
+
+const MessageContainer = document.getElementById('MessageContainer')
+const MessageContent = document.getElementById('caixaDeTexto')
+const UserNameInput = document.getElementById('UserName')
+const Login = document.getElementById('LoginButton')
+const Signin = document.getElementById('SigninButton')
+
+
+ const socket = io();
+
+     MessageContent.addEventListener('keypress', (event) => {
+
+         if (event.key === 'Enter' ) {
+             const MsgJson = MessageFactory(MessageContent.value,  currentUser.GetName(), currentUser.GetAuth(), )
+                console.log(MsgJson)
+             Observer.Subscribe(AddMessage)
+             Observer.notifyAll(MsgJson)
+             Observer.unSubscribe(AddMessage)
+             EmitMessage(MsgJson)
+             MessageContent.value = null
+             ChangeC.ajustScroll()
+            
+
+          }
+    
+     })  
+
+
+      socket.on('reenviarMensagem', (MensagemRecebida) => {
+
+         const { msg, Username } = MensagemRecebida
+         Observer.Subscribe(AddMessage)
+             Observer.notifyAll(MensagemRecebida)
+             Observer.unSubscribe(AddMessage)
+      })
+
+      socket.on('SendState', (State) => {
+         Observer.Subscribe(AddMessage)
+         for (let i = 0; i < State.length; i++) {
+             Observer.notifyAll(State[i])
+         }
+         Observer.unSubscribe(AddMessage)
+         console.log('desinscrita')
+         ChangeC.ajustScroll()
+     
+  })
+    
+    
+
+    
+
+ socket.on('usuarioInvalido', (erro) => {
+     const errText = document.getElementById('errorS')
+     errText.innerHTML = 'Usuário não disponivel. :/'
+     setInterval(() => {
+         errText.innerHTML = ''
+        
+     }, 
+     3000)
+ })
+
+
+ socket.on('uauarioCriado', () => {
+     console.log('usuario Criado')
+     ChangeC.HideFrame('Signin'); ChangeC.ShowFrame('Login')
+ })
+
+ socket.on('UsuarioLogado', (userInfo) => {
+     console.log(userInfo)
+     const { Username } = userInfo
+    
+      function Login() {
+         currentUser =  new User(Username);
+         ChangeC.HideFrame('Login');
+         ChangeC.changeMenuContent(currentUser);
+     }
+     Login()
+
+ })
+
+
+ function EmitMessage(Message) {
+     if (Message.msg != '') {  
+         socket.emit('Mensagem', Message)
+     }
+ }
+
+ function logoff() {
+       currentUser.Logoff()
+       ChangeC.changeMenuContent()
+ }
+
+ const logoffbtn = document.getElementById('Logout')
+     logoffbtn.addEventListener('click', () => {
+         Observer.Subscribe(logoff)
+         Observer.notifyAll()
+         Observer.unSubscribe(logoff)
+  
+ })
+
+
+    </script>
+
+            
+        
+
+    </body>
+</html>

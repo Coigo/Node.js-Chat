@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300&family=Montserrat:wght@400;600&display=swap');
+        * {
+            font-family: 'Inter', sans-serif;
+            color: aliceblue;
+        }
+    </style>
+</head>
+<body class="bg-dark">
+    <div class="container">
+        <div class="row mt-5">
+            <div class="col-5 bg-dark m-5">
+                <div class="h1">LOGIN</div>
+                <form action="/login" method="post">
+                    <div class="form-group m-5">
+                        <label for="username">Nome do Usuário</label>
+                        <input class="form-control mb-5" type="text" name="username" id="username" required>
+                    </div>
+                    <div class="form-group m-5">
+                        <label for="password">Senha</label>
+                        <input class="form-control" type="password" name="password" id="password" required>
+                        <p id="errorDisplay" style="color: red;"> </p>
+                    </div>
+                </form>
+                <div class="form-control bg-dark border-0 m-4">
+                    <button class="btn" style="background-color: rgb(130, 29, 203);">Entrar</button>
+                    <p>Não tem uma conta? <a style="color: rgb(130, 29, 203); text-decoration: none;" href="signup.html">Crie uma!</a></p>
+                </div>
+            </div>
+            <div class="col-6"></div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script type="module">
+        import { display } from './script/index.js'
+
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('form')
+            const submit = document.querySelector('.btn')
+
+            submit.addEventListener('click', async () => {
+                
+
+                const username = document.getElementById('username').value
+                const password = document.getElementById('password').value
+
+                if (username.length > 3 && password.length > 7) {
+                    try {
+                        const UserInfo = { username, password }
+                        console.log(UserInfo)
+                        const LoginRequest = await fetch('http://localhost:4001/login', {
+                            body: JSON.stringify(UserInfo),
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                            
+                        });
+                        window.location.href = "/"
+
+                        console.log(LoginRequest)
+                        
+
+                        
+                    }
+                    catch (err) {
+                        console.log(err)
+                        const errorDisplay = document.getElementById('errorDisplay')
+                        const errCode = err.status
+                        const status = {
+                            401: () => {
+                            display('Usuario ou senha incorretos', errorDisplay)
+                            },
+                            500: () => {
+                            display('Erro interno do servidor', errorDisplay)
+                            }
+                        }
+                        status[errCode]()
+                    }   
+                }
+                    
+            });
+        });
+    </script>
+</body>
+</html>
+
+

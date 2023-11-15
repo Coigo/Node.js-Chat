@@ -1,0 +1,198 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Conta</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300&family=Montserrat:wght@400;600&display=swap');
+        * {
+            font-family: 'Inter', sans-serif;
+            color: aliceblue;
+        }
+
+        #usernameError, #displayError {
+            transition: 0.2;
+            position: absolute;
+        }
+    </style>
+</head>
+<body class="bg-dark">
+    <div class="container">
+        <div class="row mt-5">
+            <div class="col-5 bg-dark m-5">
+                <div class="h1">LOGIN</div>
+                <form action="/signup" method="post">
+ 
+                    <div class="form-group m-5">
+                        <label for="username">Nome do Usuário</label>
+                        <input class="form-control mb-5" type="text" name="username" id="username" required>
+                        <p id="usernameError" style="color:red; position:absolute; "></p>
+                    </div>
+                    <div class="form-group m-5">
+                        <label for="email">Email</label>
+                        <input class="form-control mb-5" type="email" name="email" id="email" required>
+                        <p id="emailError" style="color:red; position:absolute;"></p>
+                    </div>
+                    <div class="form-group m-5">
+                        <label for="password">Senha</label>
+                        <input class="form-control" type="password" name="password" id="password" required>
+                    </div>
+                    <div class="form-group m-5">
+                        <label for="password">Confirme a sua senha</label>
+                        <input class="form-control" type="password" name="confirm" id="confirm" required>                        
+                        <p id="displayError" style="color:red; position:absolute; margin-bottom: 2vh;"> </p>
+                    </div>
+                </form>
+                <div class="form-control bg-dark border-0 m-4">
+                    <button class="btn" style="background-color: rgb(130, 29, 203);">Entrar</button>
+                    <p>Não tem uma conta? <a style="color: rgb(130, 29, 203); text-decoration: none;" href="signup.html">Crie uma!</a></p>
+                </div>
+            </div>
+            <div class="col-6"></div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script> 
+    <script type="module">
+
+        import { Validate, display, GetUserCredentialStatus } from './script/index.js'
+        import CreateObserver from './script/observer.js'
+        let usernameStatus 
+
+        let Userinfo = {}
+
+        const observer = CreateObserver()
+
+
+            const socket = io()
+            let usernameInput = document.getElementById("username")
+            let emailInput = document.getElementById("email")
+
+            emailInput.addEventListener("input", (event) => {
+                const email = emailInput.value.trim()
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+
+                if ( email.match(emailRegex) ) {
+                    console.log('mandado')
+                    socket.emit('CheckUsername', { method:"email", prop: email } )
+                }   
+            })
+
+            socket.on("checkStatus", (result) => {
+                if ( result.method === "email" ) {
+                const displayError = document.getElementById("displayError")
+                const emailError = document.getElementById("emailError")
+
+                    const emailStatus = {
+                        400: () => {
+                            display('Este email já esta em uso! Tente outro.', emailError)
+                            Userinfo.emailIsAvaliable = GetUserCredentialStatus(400)
+                            console.log('veio aqui em cima')
+                        },
+                        500: () => {
+                            display('Erro interno do servidor', displayError)
+                        },
+                        200: () => {
+                            Userinfo.email = email
+                            Userinfo.emailIsAvaliable = GetUserCredentialStatus(200)
+                            display("", emailError)
+                        }
+                    }
+                const callEmailStatus = emailStatus[result.status]()
+                }
+            })
+            
+            
+            
+            
+            usernameInput.addEventListener("input", (event) => {
+                let username = usernameInput.value
+                socket.emit('CheckUsername', { method:"username", prop:username } )
+            })
+            socket.on("checkStatus", (result) => {
+                if ( result.method === "username" ) {
+                    console.log(result)
+                    const displayError = document.getElementById("displayError")
+                    const usernameError = document.getElementById("usernameError")
+    
+                    const usernameStatus = {
+                                    400: () => {
+                                        display("Este username já foi escolhido!", usernameError)
+                                        Userinfo.usernameIsAvaliable = GetUserCredentialStatus(400)
+                                        console.log('veio aqui embaixo')
+                                    },
+                                    500: () => {
+                                        display('Erro interno do servidor.', displayError)
+                                    },
+                                    200: () => {
+                                        Userinfo.usernameIsAvaliable = GetUserCredentialStatus(200)
+                                        Userinfo.username = username.value
+                                        display("", usernameError)
+                                    }
+                                }
+                                const callUsernameStatus = usernameStatus[result.status]();
+                                
+                                
+                } 
+            })
+
+
+            const submit =  document.querySelector('.btn')
+            submit.addEventListener('click', () => {
+                const password = document.getElementById('password').value
+                const confirm = document.getElementById('confirm').value
+                const email = document.getElementById('email').value
+                
+                Userinfo.password = password
+                Userinfo.confirm = confirm
+                Userinfo.email = email
+    
+                observer.Subscribe(Validate)
+                const newUserStatus = observer.notifyAll(Userinfo)
+                observer.unSubscribe(Validate)
+    
+                        const statusFunctions = {
+                            'SenhasDiferentes': async function() {
+                            display('Senhas diferentes!', displayError)
+                            },
+                            'SenhaCurta': async function() {
+                            display('Senha muito curta!')
+                            },
+                            'TudoCerto': async () => {
+                                console.log('oioioi')
+                            await FetchForm(Userinfo)
+                            }
+                        }
+                        const callStatusFunction = statusFunctions[newUserStatus]()
+            })
+
+
+
+  
+
+                    async function FetchForm(userInfo) {
+                        if ( userInfo.usernameIsAvaliable === true && userInfo.emailIsAvaliable === true ) {
+                            console.log('ok')
+                            try {
+                                console.log('ok?');
+                                const result = await axios.post("http://localhost:4001/signup", JSON.stringify(userInfo),  {
+                                    headers: { "Content-Type": "application/json" }
+                                })
+                                window.location.href = "/login"
+                            }
+                            catch ( err ) {
+                                display('Erro interno do servidor, tente novamente mais tarde!', displayError)
+                            }
+                        }
+                    }
+
+
+        </script>
+</body>
+</html>
+
+
