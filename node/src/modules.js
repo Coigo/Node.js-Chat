@@ -28,7 +28,6 @@ const decrypt = (private) => {
 
 
 
-
 module.exports = {
     private, 
     decrypt

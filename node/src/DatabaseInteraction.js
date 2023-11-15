@@ -2,14 +2,6 @@ const fs = require('fs');
 
 
 
-
-
-
-
-
-
-
-
 function LoginUser(user) {
   const { Username, Password } = user
 

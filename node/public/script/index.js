@@ -2,8 +2,7 @@ import CreateObserver from "./observer.js"
 import User from './user.js'
 
 const MessageContainer = document.getElementById('MessageContainer')
-var guesthasbeenset = false
-var guestID 
+
 
 const Observer = CreateObserver()
 
@@ -21,8 +20,6 @@ export function MessageFactory(msg, username, Auth) {
   }
   return CreateMessageObject()
 }
-
-
 
 
 

@@ -168,6 +168,7 @@ io.on('connection', (socket) => {
 
     DbInteraction.readJsonFile('src/mensagens.json')
       .then(allMessages => {  
+        console.log(allMessages)
         socket.emit('SendState', allMessages) 
       })
       .catch(err => {
@@ -189,7 +190,7 @@ io.on('connection', (socket) => {
   
           DbInteraction.readJsonFile('src/mensagens.json')
             .then(allMessages => {
-              allMessages.push({ msg, id })
+              allMessages.push({ msg, username })
               DbInteraction.SalvarObjeto(allMessages, 'src/mensagens.json')
   
           })
@@ -227,6 +228,7 @@ io.on('connection', (socket) => {
         
       })
 })
+
 
 
 
